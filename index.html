@@ -43,6 +43,41 @@
 @keyframes fude-think{0%,100%{transform:rotate(0)}35%{transform:rotate(8deg)}70%{transform:rotate(-5deg)}}
 @media(prefers-reduced-motion:reduce){.fudemaru-reactor img{animation:none!important;transition:none}}
 @media(max-width:700px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.two-col{grid-template-columns:1fr}.fudemaru-reactor{left:8px;bottom:8px}.fudemaru-reactor .fude-bubble{max-width:155px;font-size:11px}}
+
+/* v12: smartphone responsive layout */
+.app.member-mode{grid-template-columns:1fr}
+.app.member-mode .sidebar{display:none}
+@media(max-width:900px){
+  .app{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .main{width:100%;min-width:0}
+  .content{padding:clamp(12px,3vw,22px)}
+  .topbar{padding:0 clamp(12px,3vw,20px);gap:8px}
+  .top-right{gap:8px}
+}
+@media(max-width:560px){
+  body{font-size:14px}
+  .topbar{height:auto;min-height:58px;padding:10px 12px;flex-wrap:wrap}
+  .top-right{margin-left:auto;max-width:100%;flex-wrap:wrap;justify-content:flex-end}
+  .role-switch{display:flex;max-width:100%}
+  .role-switch button{padding:8px 10px;font-size:12px}
+  .avatar{width:32px;height:32px;flex:0 0 32px}
+  .member-banner{padding:16px!important;border-radius:14px}
+  .member-banner h2{font-size:20px!important;line-height:1.4}
+  .member-pick{width:100%;max-width:100%}
+  .member-pick select{width:100%;min-width:0}
+  .page-head h1{font-size:21px}
+  .page-head .actions{width:100%}
+  .card,.claim-form{max-width:100%;box-sizing:border-box}
+  .survey-choice{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .survey-choice button{min-width:0;padding:11px 8px}
+  .form-grid{grid-template-columns:1fr!important}
+  .field.full{grid-column:auto}
+  input,select,textarea{max-width:100%;box-sizing:border-box}
+  .finance-row{gap:10px;flex-wrap:wrap}
+  .finance-row>div:last-child{margin-left:auto}
+  .modal{width:calc(100vw - 24px);max-width:calc(100vw - 24px);max-height:90vh;overflow:auto}
+}
 </style></head>
 <body>
 <div class="app">
@@ -134,7 +169,7 @@ document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{if(mode!=='ad
 $('#adminMode').onclick=()=>requestAdminMode();$('#memberMode').onclick=()=>{publicRoute=null;mode='member';setMode();render()};
 function requestAdminMode(){if(mode==='admin')return;const pw=prompt('管理者パスワードを入力してください');if(pw===null)return;if(pw!==localStorage.getItem(ADMIN_PASSWORD_KEY)){alert('パスワードが違います。');return;}publicRoute=null;mode='admin';setMode();render();}
 function changeAdminPassword(){if(mode!=='admin')return;const old=prompt('現在の管理者パスワードを入力してください');if(old===null)return;if(old!==localStorage.getItem(ADMIN_PASSWORD_KEY)){alert('現在のパスワードが違います。');return;}const next=prompt('新しいパスワードを入力してください（8文字以上推奨）');if(next===null)return;if(next.length<8){alert('8文字以上にしてください。');return;}const again=prompt('新しいパスワードをもう一度入力してください');if(again!==next){alert('確認用パスワードが一致しません。');return;}localStorage.setItem(ADMIN_PASSWORD_KEY,next);alert('管理者パスワードを変更しました。');}
-function setMode(){ $('#adminMode').classList.toggle('active',mode==='admin');$('#memberMode').classList.toggle('active',mode==='member');$('#avatar').textContent=mode==='admin'?'管':'部';$('#nav').style.display=mode==='admin'?'':'none';$('#nav').style.opacity=mode==='admin'?'1':'.35';$('#nav').style.pointerEvents=mode==='admin'?'auto':'none';$('#changeAdminPassword').style.display=mode==='admin'?'':'none'; }
+function setMode(){ document.querySelector('.app').classList.toggle('member-mode',mode==='member'); $('#adminMode').classList.toggle('active',mode==='admin');$('#memberMode').classList.toggle('active',mode==='member');$('#avatar').textContent=mode==='admin'?'管':'部';$('#nav').style.display=mode==='admin'?'':'none';$('#nav').style.opacity=mode==='admin'?'1':'.35';$('#nav').style.pointerEvents=mode==='admin'?'auto':'none';$('#changeAdminPassword').style.display=mode==='admin'?'':'none'; }
 function render(){if(publicRoute){renderPublicRoute();return;} $('#crumbPage').textContent=mode==='member'?'部員ポータル':pageName(page); if(mode==='member'){renderMemberPortal();return} ({dashboard:renderDashboard,members:renderMembers,events:renderEvents,collections:renderCollections,finance:renderFinance,schedule:renderSchedule,ai:renderAI}[page]||renderDashboard)(); }
 function head(title,sub,actions=''){return `<div class="page-head"><div><div class="eyebrow">FUDEMARU / ${pageName(page).toUpperCase()}</div><h1>${title}</h1><p class="sub">${sub}</p></div><div class="actions">${actions}</div></div>`}
 function renderDashboard(){let total=state.members.length,active=state.events.length,coll=state.collections.reduce((a,c)=>a+c.memberIds.filter(id=>!c.paidIds.includes(id)).length,0);let upcoming=state.events.filter(e=>e.date>=today()).sort((a,b)=>a.date.localeCompare(b.date));let collected=state.collections.reduce((a,c)=>a+c.memberIds.filter(id=>c.paidIds.includes(id)).length,0);let due=state.collections.reduce((a,c)=>a+c.memberIds.length,0);$('#content').innerHTML=head('活動状況をひと目で把握','部員・イベント・徴収状況をまとめて確認できます。',`<button class="btn" onclick="exportBackup()">↧ データを書き出す</button><button class="btn primary" onclick="openEventModal()">＋ イベントを作成</button>`)+`
